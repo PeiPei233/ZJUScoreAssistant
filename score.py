@@ -117,5 +117,8 @@ def updatescore():
     driver.quit()
 
 while True:
-    updatescore()
+    try:
+        updatescore()
+    except:
+        print('Fail')
     sleep(random.randint(60, 420))
