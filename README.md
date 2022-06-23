@@ -1,5 +1,5 @@
 # ScoreNotification
-Notification of ZJU score based on Selenium.
+Notification of ZJU score.
 
 The application will get your score in ZJU every 1 to 5 minutes and inform you by DingTalk Robot.
 
