@@ -6,7 +6,6 @@ The application will get your score in ZJU every 1 to 5 minutes and inform you b
 ## Usage
 1. Download the zip from this repository and Unzip.
 2. Using `pip install -r requirements.txt` to install the requirements.
-3. Download the chromedriver suitable to your chrome version from <https://chromedriver.chromium.org/downloads>.
 3. Set your DingTalk Robot. In the robot security setting, just add `成绩` to the custom keyword. You can customized your robot's photo and name like the following examples.
 4. Add your information into `database.json`.
     - `username`    the username to log in ZJU Unfied Identity Authentication, usually your Student ID in ZJU
