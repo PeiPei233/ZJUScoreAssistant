@@ -120,12 +120,12 @@ def updatescore():
                     "title": "考试成绩通知",
                     "text": "\
 ### 考试成绩通知\n\
-- **选课课号**\t%s\n\
-- **课程名称**\t%s\n\
-- **成绩**\t%s\n\
-- **学分**\t%s\n\
-- **绩点**\t%s\n\
-- **成绩变化**\t%.2f(%+.2f) / %.1f(%+.1f)" % (id, name, score, credit, gp, newgpa, newgpa - gpa, newtotcredits, newtotcredits - totcredits)
+ - **选课课号**\t%s\n\
+ - **课程名称**\t%s\n\
+ - **成绩**\t%s\n\
+ - **学分**\t%s\n\
+ - **绩点**\t%s\n\
+ - **成绩变化**\t%.2f(%+.2f) / %.1f(%+.1f)" % (id, name, score, credit, gp, newgpa, newgpa - gpa, newtotcredits, newtotcredits - totcredits)
                 }
             })
         print('考试成绩通知\n选课课号\t%s\n课程名称\t%s\n成绩\t%s\n学分\t%s\n绩点\t%s\n成绩变化\t%.2f(%+.2f) / %.1f(%+.1f)' % (id, name, score, credit, gp, newgpa, newgpa - gpa, newtotcredits, newtotcredits - totcredits))
