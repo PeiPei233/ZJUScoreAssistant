@@ -13,7 +13,7 @@ The application will get your score in ZJU every 1 to 5 minutes and inform you b
     - `url` the Webhook of your DingTalk Robot.
 5. Run `python score.py`.
 
-**Notice** For a better experience, it is recommended that you put this application on the server.
+**NOTICE** For a better experience, it is recommended that you put this application on the server.
 
 ## Examples:
 
