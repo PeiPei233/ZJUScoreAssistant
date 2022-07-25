@@ -1,3 +1,4 @@
+from psutil import users
 import requests
 import re
 import json
@@ -68,12 +69,16 @@ def updatescore():
         },
         headers=headers
         )
-
+    
     # 成绩的表格
     table = re.finditer(r'<td>(?P<id>.*?)</td><td>(?P<name>.*?)</td><td>(?P<score>.*?)</td><td>(?P<credit>.*?)</td><td>(?P<gp>.*?)</td>', res.text)
 
-    with open("userscore.json", 'r') as load_f:
+    try:
+        with open("dingscore.json", 'r') as load_f:
             userscore = json.load(load_f)
+    except json.decoder.JSONDecodeError:
+        userscore = {}
+
     totcredits = 0
     totgp = 0
     for lesson in userscore:
@@ -83,7 +88,7 @@ def updatescore():
         gpa = totgp / totcredits
     except:
         gpa = 0
-
+    
     #对比以更新
     for lesson in table:
         id = lesson.group('id')
@@ -95,7 +100,7 @@ def updatescore():
             continue
         if userscore.get(id) != None:
             continue
-
+        
         #新的成绩更新
         userscore[id] = {
             'name': name,
@@ -112,35 +117,40 @@ def updatescore():
             newgpa = newtotgp / newtotcredits
         except:
             newgpa = 0
-
+        
         #钉钉推送消息
-        requests.post(url=url, json={
-            "msgtype": "markdown",
-            "markdown" : {
-                "title": "考试成绩通知",
-                "text": "\
-### 考试成绩通知\n\
- - **选课课号**\t%s\n\
- - **课程名称**\t%s\n\
- - **成绩**\t%s\n\
- - **学分**\t%s\n\
- - **绩点**\t%s\n\
- - **成绩变化**\t%.2f(%+.2f) / %.1f(%+.1f)" % (id, name, score, credit, gp, newgpa, newgpa - gpa, newtotcredits, newtotcredits - totcredits)
-            }
-        })
+        try:
+            requests.post(url=url, json={
+                "msgtype": "markdown",
+                "markdown" : {
+                    "title": "考试成绩通知",
+                    "text": "\
+    ### 考试成绩通知\n\
+    - **选课课号**\t%s\n\
+    - **课程名称**\t%s\n\
+    - **成绩**\t%s\n\
+    - **学分**\t%s\n\
+    - **绩点**\t%s\n\
+    - **成绩变化**\t%.2f(%+.2f) / %.1f(%+.1f)" % (id, name, score, credit, gp, newgpa, newgpa - gpa, newtotcredits, newtotcredits - totcredits)
+                }
+            })
+        except requests.exceptions.MissingSchema:
+            print('The DingTalk Webhook URL is in valid. Please use -d [DingWebhook] to reset it first.')
+        
         print('考试成绩通知\n选课课号\t%s\n课程名称\t%s\n成绩\t%s\n学分\t%s\n绩点\t%s\n成绩变化\t%.2f(%+.2f) / %.1f(%+.1f)' % (id, name, score, credit, gp, newgpa, newgpa - gpa, newtotcredits, newtotcredits - totcredits))
         totcredits = newtotcredits
         totgp = newtotgp
         gpa = newgpa
 
     #保存新的数据
-    with open("userscore.json", 'w') as load_f:
+    with open("dingscore.json", 'w') as load_f:
         load_f.write(json.dumps(userscore))
 
-while True:
-    try:
-        updatescore()
-    except:
-        print(time.ctime() + " Fail")
-    finally:
-        time.sleep(random.randint(60, 300))
+def scorenotification():
+    while True:
+        try:
+            updatescore()
+        except:
+            print(time.ctime() + " Fail")
+        finally:
+            time.sleep(random.randint(60, 300))
