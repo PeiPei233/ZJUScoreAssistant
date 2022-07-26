@@ -31,9 +31,12 @@ if __name__ == '__main__':
         password = args.initial[1]
 
         session = zjusess()
-        if not session.login(username, password):
-            print('Invalid username or password. Please check them again and use -i to reset them.')
-            sys.exit()
+        try:
+            if not session.login(username, password):
+                print('Invalid username or password. Please check them again and use -i to reset them.')
+                sys.exit()
+        except requests.exceptions.ConnectionError:
+            print('Cannot connect to the Internet. Please check your Internet connection.')
         else:
             with open("database.json", 'w') as load_f:
                 load_f.write(json.dumps(database))
@@ -43,8 +46,12 @@ if __name__ == '__main__':
     data = {}
     if args.update:
         session = zjusess()
-        with open('database.json', 'r') as f:
-            userdata = json.load(f)
+        try:
+            with open('database.json', 'r') as f:
+                userdata = json.load(f)
+        except:
+            print('Cannot find your user data. Please use -i to initialize.')
+            sys.exit()
         username = userdata['username']
         password = userdata['password']
         try:
