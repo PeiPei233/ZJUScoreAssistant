@@ -1,4 +1,3 @@
-from psutil import users
 import requests
 import re
 import json
