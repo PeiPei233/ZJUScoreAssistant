@@ -3,3 +3,6 @@ userscore.json
 dingscore.json
 .vscode
 __pycache__
+build
+dist
+zjuscore.spec
