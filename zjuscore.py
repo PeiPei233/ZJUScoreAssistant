@@ -4,12 +4,26 @@ import json
 import difflib
 import sys
 import requests
+import colorama
+from colorama import Fore
 from zjusess import zjusess
 from scorenotification import scorenotification
 
 # 用于中文对齐输出 
 def pad_len(string, length):
     return length - len(string.encode('GBK')) + len(string)
+
+class LOG:
+    info = Fore.CYAN + 'Info: ' + Fore.RESET
+    warning = Fore.YELLOW + 'Warning: ' + Fore.RESET
+    error = Fore.RED + 'Error: ' + Fore.RESET
+    done = Fore.GREEN + 'Done: ' + Fore.RESET
+    tips = Fore.MAGENTA + 'Tips: ' + Fore.RESET
+    default = ''
+
+def print_log(log : LOG, *args, **kwargs):
+    print(log, end='')
+    print(*args, **kwargs)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ZJU Score Assistant')
@@ -21,6 +35,8 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--ding', nargs='?', metavar=('DingWebhook'), default=argparse.SUPPRESS, help='set your DingTalk Robot Webhook. Empty means disabled')
     parser.add_argument('-dn', '--dnotification', action='store_true', help='enable dingtalk score notification')
     args = parser.parse_args()
+
+    colorama.init(autoreset=True)
 
     if args.initial:
 
@@ -35,14 +51,14 @@ if __name__ == '__main__':
         session = zjusess()
         try:
             if not session.login(username, password):
-                print('Invalid username or password. Please check them again and use -i to reset them.')
+                print_log(LOG.error, 'Invalid username or password. Please check them again and use -i to reset them.')
                 sys.exit()
         except requests.exceptions.ConnectionError:
-            print('Cannot connect to the Internet. Please check your Internet connection.')
+            print_log(LOG.error, 'Cannot connect to the Internet. Please check your Internet connection.')
         else:
             with open("database.json", 'w') as load_f:
                 load_f.write(json.dumps(database))
-            print('Initial Success!')
+            print_log(LOG.done, 'Initial Success!')
         session.close()
 
     data = {}
@@ -52,17 +68,17 @@ if __name__ == '__main__':
             with open('database.json', 'r') as f:
                 userdata = json.load(f)
         except:
-            print('Cannot find your user data. Please use -i to initialize.')
+            print_log(LOG.error, 'Cannot find your user data. Please use -i to initialize.')
             sys.exit()
         username = userdata['username']
         password = userdata['password']
         try:
             res = session.login(username, password)
         except requests.exceptions.ConnectionError:
-            print('Cannot connect to the Internet. Please check your Internet connection.')
+            print_log(LOG.error, 'Cannot connect to the Internet. Please check your Internet connection.')
         else:
             if not res:
-                print('Login failed. Please check your username and password. Remember to use -i to reset them.')
+                print_log(LOG.error, 'Login failed. Please check your username and password. Remember to use -i to reset them.')
             else:
                 #打开成绩查询网站
                 res = session.get(r'http://appservice.zju.edu.cn/zdjw/cjcx/cjcxjg?lx=0&xn=&xq=&cjd=&xqtit=%E6%98%A5%E3%80%81%E5%A4%8F')
@@ -71,21 +87,22 @@ if __name__ == '__main__':
                 data = dict(enumerate(res.json()['data']['list']))
                 with open('userscore.json', 'w') as f:
                     f.write(json.dumps(data))
-                print('Updated Success!')
+                print_log(LOG.done, 'Updated Successfully!')
         session.close()
     else:
         try:
             with open('userscore.json', 'r') as f:
                 data = json.load(f)
         except:
-            print('Cannot find your score data, please use -u to update first.')
+            print_log(LOG.error, 'Cannot find your score data, please use -u to update first.')
 
     if args.list != None:
         if len(args.list) == 0:
             
             courses = data.values()
             if len(courses) == 0:
-                print(f'Cannot find any courses.')
+                print_log(LOG.info, f'Cannot find any courses during the whole college.')
+                print_log(LOG.tips, 'Maybe you need to use -u to update first :)')
             else:
                 print(f'{"Semeter":16s}{"Name":20s}\tMark\tGP\tCredit')
                 for course in courses:
@@ -103,7 +120,8 @@ if __name__ == '__main__':
             courses = [i for i in data.values() if i.get('xn').find(args.list[0]) == 0]
 
             if len(courses) == 0:
-                print(f'Cannot find any courses.')
+                print_log(LOG.info, f'Cannot find any courses about the academic year of {args.list[0]}.')
+                print_log(LOG.tips, 'Maybe you need to use -u to update first :)')
             else:
                 print(f'{"Semeter":16s}{"Name":20s}\tMark\tGP\tCredit')
                 for course in courses:
@@ -118,12 +136,13 @@ if __name__ == '__main__':
 
         elif len(args.list) >= 2:
             if len(args.list) > 2:
-                print(f'The following argument(s) will be ignored:\n\t{" ".join(args.list[2:])}')
+                print_log(LOG.warning, f'The following argument(s) will be ignored:\n\t{" ".join(args.list[2:])}')
 
             courses = [i for i in data.values() if i.get('xn').find(args.list[0]) == 0 and args.list[1].find(i.get('xq')) != -1]
 
             if len(courses) == 0:
-                print(f'Cannot find any courses.')
+                print_log(LOG.info, f'Cannot find any courses about the semester of {" ".join(args.list[:2])}')
+                print_log(LOG.tips, 'Maybe you need to use -u to update first :)')
             else:
                 print(f'{"Semeter":16s}{"Name":20s}\tMark\tGP\tCredit')
                 for course in courses:
@@ -143,7 +162,7 @@ if __name__ == '__main__':
             res += difflib.get_close_matches(searchcourse, coursename, cutoff=0.3)
         res = list(dict().fromkeys(res).keys())
         if len(res) == 0:
-            print(f'Cannot find any course matching keyword(s) {" ".join(args.name)}')
+            print_log(LOG.info, f'Cannot find any course matching keyword(s) {" ".join(args.name)}')
         else:
             print(f'{"Semeter":16s}{"Name":20s}\tMark\tGP\tCredit')
             for name in res:
@@ -165,7 +184,8 @@ if __name__ == '__main__':
             credit = [float(i.get('xf')) for i in data.values()]
 
             if len(grade) == 0:
-                print('Cannot find any courses.')
+                print_log(LOG.info, f'Cannot find any courses during the whole college.')
+                print_log(LOG.tips, 'Maybe you need to use -u to update first :)')
             else:
                 gp = .0
                 for i in range(len(grade)):
@@ -174,7 +194,7 @@ if __name__ == '__main__':
                 gpa = 0
                 if totcredit != 0:
                     gpa = gp / totcredit
-                print('Your GPA during the whole college is %.2f' % gpa)
+                print_log(LOG.done, 'Your GPA during the whole college is %.2f and GP is %.2f' % (gpa, gp))
 
         elif len(args.gpa) == 1:
 
@@ -182,7 +202,8 @@ if __name__ == '__main__':
             credit = [float(i.get('xf')) for i in data.values() if i.get('xn').find(args.gpa[0]) == 0]
 
             if len(grade) == 0:
-                print(f'Cannot find any courses about the academic year of {args.gpa[0]}')
+                print_log(LOG.info, f'Cannot find any courses about the academic year of {args.gpa[0]}')
+                print_log(LOG.tips, 'Maybe you need to use -u to update first :)')
             else:
                 gp = .0
                 for i in range(len(grade)):
@@ -199,17 +220,18 @@ if __name__ == '__main__':
                         year = i.get('xn')
                         break
 
-                print('Your GPA during the academic year of %s is %.2f' % (year, gpa))
+                print_log(LOG.done, 'Your GPA during the academic year of %s is %.2f and GP is %.2f' % (year, gpa, gp))
 
         elif len(args.gpa) >= 2:
             if len(args.gpa) > 2:
-                print(f'The following argument(s) will be ignored:\n\t{" ".join(args.gpa[2:])}')
+                print_log(LOG.warning, f'The following argument(s) will be ignored:\n\t{" ".join(args.gpa[2:])}')
 
             grade = [i.get('jd') for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq')) != -1]
             credit = [float(i.get('xf')) for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq')) != -1]
 
             if len(grade) == 0:
-                print(f'Cannot find any courses about the semester of {" ".join(args.gpa[:2])}')
+                print_log(LOG.info, f'Cannot find any courses about the semester of {" ".join(args.gpa[:2])}')
+                print_log(LOG.tips, 'Maybe you need to use -u to update first :)')
             else:
                 gp = .0
                 for i in range(len(grade)):
@@ -227,7 +249,7 @@ if __name__ == '__main__':
                         year = i.get('xn')
                         break
 
-                print('Your GPA during the semester of %s %s is %.2f' % (year, semster, gpa))
+                print_log(LOG.done, 'Your GPA during the semester of %s %s is %.2f and GP is %.2f' % (year, semster, gpa, gp))
 
     try:
         if args.ding:
