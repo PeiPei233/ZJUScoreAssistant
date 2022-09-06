@@ -1,8 +1,8 @@
-database.json
-userscore.json
-dingscore.json
+*.json
 .vscode
 __pycache__
 build
 dist
-zjuscore.spec
+*.spec
+*.pkl
+test*

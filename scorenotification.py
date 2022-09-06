@@ -1,55 +1,41 @@
+import imp
 import requests
 import re
 import json
-import math
+import pickle
 import time
 import random
-
-def rsa_no_padding(src, modulus, exponent):
-    m = int(modulus, 16)
-    e = int(exponent, 16)
-    t = bytes(src, 'ascii')
-    # 字符串转换为bytes
-    input_nr = int.from_bytes(t, byteorder='big')
-    # 将字节转化成int型数字，如果没有标明进制，看做ascii码值
-    crypt_nr = pow(input_nr, e, m)
-    # 计算x的y次方，如果z在存在，则再对结果进行取模，其结果等效于pow(x,y) %z
-    length = math.ceil(m.bit_length() / 8)
-    # 取模数的比特长度(二进制长度)，除以8将比特转为字节
-    crypt_data = crypt_nr.to_bytes(length, byteorder='big')
-    # 将密文转换为bytes存储(8字节)，返回hex(16字节)
-    return crypt_data.hex()
+import sys
+from zjusess import zjusess
 
 def updatescore():
-    session = requests.session()
 
-    # 打开网站
-    res = session.get('https://zjuam.zju.edu.cn/cas/login?service=http://jwbinfosys.zju.edu.cn/default2.aspx')
-    # 获取execution的值以用于登录
-    execution = re.findall(r'<input type="hidden" name="execution" value="(.*?)" />', res.text)[0]
-    # 获取RSA公钥
-    res = session.get('https://zjuam.zju.edu.cn/cas/v2/getPubKey')
-    modulus = res.json()['modulus']
-    exponent = res.json()['exponent']
+    session = zjusess()
 
-    with open('database.json', 'r') as f:
-        userdata = json.load(f)
-    username = userdata['username']
-    password = userdata['password']
-    url = userdata.get('url', 'https://oapi.dingtalk.com/robot/send?access_token=')
+    try:
+        with open('cookies.pkl', 'rb') as f:
+            cookies = pickle.load(f)
+    except:
+        print('You have not logged in. Please use -i to log in first.')
+        sys.exit()
 
-    rsapwd = rsa_no_padding(password, modulus, exponent)
+    try:
+        with open('database.json', 'r') as f:
+            userdata = json.load(f)
+    except (FileNotFoundError, json.decoder.JSONDecodeError):
+        print('Cannot find your userdata. Please use -i to log in first.')
+        sys.exit()
+    else:
+        username = userdata['username']
+        url = userdata.get('url', 'https://oapi.dingtalk.com/robot/send?access_token=')
 
-    data = {
-        'username': username,
-        'password': rsapwd,
-        'execution': execution,
-        '_eventId': 'submit'
-    }
-    # 登录
-    res = session.post('https://zjuam.zju.edu.cn/cas/login?service=http://jwbinfosys.zju.edu.cn/default2.aspx', data)
+    
+    session.cookies = cookies
+
+    res = session.post('http://jwbinfosys.zju.edu.cn/default2.aspx')
     #打开成绩查询网站
     res = session.get('http://jwbinfosys.zju.edu.cn/xsdhqt.aspx?dl=iconcjcx')
+
     #获取__VIEWSTATE以用于查询
     viewstate = re.findall(r'<input type="hidden" name="__VIEWSTATE" value="(.*?)" />', res.text)[0]
     headers = {
@@ -68,14 +54,14 @@ def updatescore():
         },
         headers=headers
         )
-    
+        
     # 成绩的表格
     table = re.finditer(r'<td>(?P<id>.*?)</td><td>(?P<name>.*?)</td><td>(?P<score>.*?)</td><td>(?P<credit>.*?)</td><td>(?P<gp>.*?)</td>', res.text)
 
     try:
         with open("dingscore.json", 'r') as load_f:
             userscore = json.load(load_f)
-    except json.decoder.JSONDecodeError:
+    except (json.decoder.JSONDecodeError, FileNotFoundError):
         userscore = {}
 
     totcredits = 0
@@ -144,12 +130,15 @@ def updatescore():
     #保存新的数据
     with open("dingscore.json", 'w') as load_f:
         load_f.write(json.dumps(userscore))
+    
+    print(time.ctime() + ' Success')
 
 def scorenotification():
+    # updatescore()
     while True:
         try:
             updatescore()
-        except:
-            print(time.ctime() + " Fail")
+        except Exception as e:
+            print(time.ctime() + " Fail with exception: " + str(e))
         finally:
             time.sleep(random.randint(60, 300))

@@ -1,8 +1,11 @@
 import argparse
+import pickle
 import json
 import difflib
 import sys
 import requests
+import os
+import getpass
 from zjusess import zjusess
 from scorenotification import scorenotification
 
@@ -12,7 +15,8 @@ def pad_len(string, length):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ZJU Score Assistant')
-    parser.add_argument('-i', '--initial', nargs=2, metavar=('username', 'password'), help='initialize your information')
+    parser.add_argument('-i', '--login', action='store_true', help='log in with ZJUAM account')
+    parser.add_argument('-o', '--logout', action='store_true', help='log out')
     parser.add_argument('-u', '--update', action='store_true', help='update the course score')
     parser.add_argument('-ls', '--list', nargs='*', metavar=('YEAR', 'SEMESTER'), help='list the course and score in a certain year/semester')
     parser.add_argument('-n', '--name', nargs='+', help='search score by the name of the course')
@@ -21,55 +25,73 @@ if __name__ == '__main__':
     parser.add_argument('-dn', '--dnotification', action='store_true', help='enable dingtalk score notification')
     args = parser.parse_args()
 
-    if args.initial:
-        database = {
-            'username': args.initial[0],
-            'password': args.initial[1],
-        }
+    if args.login:
 
-        username = args.initial[0]
-        password = args.initial[1]
+        username = input("ZJUAM account's username: ")
+        password = getpass.getpass(f"ZJUAM {username}'s password: ")
 
         session = zjusess()
+
         try:
             if not session.login(username, password):
-                print('Invalid username or password. Please check them again and use -i to reset them.')
+                print('Log in failed. Please check your username and password again and use -i to reset them.')
                 sys.exit()
         except requests.exceptions.ConnectionError:
             print('Cannot connect to the Internet. Please check your Internet connection.')
+            sys.exit()
         else:
-            with open("database.json", 'w') as load_f:
-                load_f.write(json.dumps(database))
-            print('Initial Success!')
+            with open("cookies.pkl", 'wb') as load_f:
+                pickle.dump(session.cookies, load_f)
+            print('Login succeeded!')
         session.close()
+
+        try:
+            with open('database.json', 'r') as f:
+                userdata = json.load(f)
+        except:
+            userdata = {}
+        userdata['username'] = username
+        with open('database.json', 'w') as f:
+            f.write(json.dumps(userdata))
+
+    if args.logout:
+        try:
+            os.remove('cookies.pkl')
+        except FileNotFoundError:
+            print('You have not logged in.')
+        else:
+            print('Logout succeeded!')
 
     data = {}
     if args.update:
         session = zjusess()
         try:
-            with open('database.json', 'r') as f:
-                userdata = json.load(f)
+            with open('cookies.pkl', 'rb') as f:
+                cookies = pickle.load(f)
         except:
-            print('Cannot find your user data. Please use -i to initialize.')
+            print('You have not logged in. Please use -i to log in first.')
             sys.exit()
-        username = userdata['username']
-        password = userdata['password']
+        
+        session.cookies = cookies
+
         try:
-            res = session.login(username, password)
+            res = session.get('https://zjuam.zju.edu.cn/cas/login')
+            if res.text.find('统一身份认证平台'):
+                print('The identity authentication has expired. Please use -i to log in again.')
+                sys.exit()
+
+            #打开成绩查询网站
+            res = session.get(r'http://appservice.zju.edu.cn/zdjw/cjcx/cjcxjg?lx=0&xn=&xq=&cjd=&xqtit=%E6%98%A5%E3%80%81%E5%A4%8F')
+            res = session.post('http://appservice.zju.edu.cn/zju-smartcampus/zdydjw/api/kkqk_cxXscjxx')
+
+            data = dict(enumerate(res.json()['data']['list']))
+            with open('userscore.json', 'w') as f:
+                f.write(json.dumps(data))
+            print('Updated Successfully!')
         except requests.exceptions.ConnectionError:
             print('Cannot connect to the Internet. Please check your Internet connection.')
-        else:
-            if not res:
-                print('Login failed. Please check your username and password. Remember to use -i to reset them.')
-            else:
-                #打开成绩查询网站
-                res = session.get(r'http://appservice.zju.edu.cn/zdjw/cjcx/cjcxjg?lx=0&xn=&xq=&cjd=&xqtit=%E6%98%A5%E3%80%81%E5%A4%8F')
-                res = session.post('http://appservice.zju.edu.cn/zju-smartcampus/zdydjw/api/kkqk_cxXscjxx')
-
-                data = dict(enumerate(res.json()['data']['list']))
-                with open('userscore.json', 'w') as f:
-                    f.write(json.dumps(data))
-                print('Updated Success!')
+            sys.exit()
+        session.close()
     else:
         try:
             with open('userscore.json', 'r') as f:
@@ -100,7 +122,7 @@ if __name__ == '__main__':
             courses = [i for i in data.values() if i.get('xn').find(args.list[0]) == 0]
 
             if len(courses) == 0:
-                print(f'Cannot find any courses.')
+                print(f'Cannot find any courses about the academic year of {args.list[0]}.')
             else:
                 print(f'{"Semeter":16s}{"Name":20s}\tMark\tGP\tCredit')
                 for course in courses:
@@ -115,12 +137,12 @@ if __name__ == '__main__':
 
         elif len(args.list) >= 2:
             if len(args.list) > 2:
-                print(f'The following argument(s) will be ignored:\n\t{" ".join(args.list[2:])}')
+                print(f'Warning: The following argument(s) will be ignored:\n\t{" ".join(args.list[2:])}')
 
             courses = [i for i in data.values() if i.get('xn').find(args.list[0]) == 0 and args.list[1].find(i.get('xq')) != -1]
 
             if len(courses) == 0:
-                print(f'Cannot find any courses.')
+                print(f'Cannot find any courses about the semester of {" ".join(args.list[:2])}.')
             else:
                 print(f'{"Semeter":16s}{"Name":20s}\tMark\tGP\tCredit')
                 for course in courses:
@@ -200,7 +222,7 @@ if __name__ == '__main__':
 
         elif len(args.gpa) >= 2:
             if len(args.gpa) > 2:
-                print(f'The following argument(s) will be ignored:\n\t{" ".join(args.gpa[2:])}')
+                print(f'Warning: The following argument(s) will be ignored:\n\t{" ".join(args.gpa[2:])}')
 
             grade = [i.get('jd') for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq')) != -1]
             credit = [float(i.get('xf')) for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq')) != -1]

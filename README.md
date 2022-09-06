@@ -15,7 +15,7 @@ Download the zip from this repository and unzip, or git this repository to your 
 You can use the score assistant through the following arguments:
 
 ```powershell
-python zjuscore.py [-h] [-i username password] [-u] [-ls [YEAR [SEMESTER ...]]] [-n NAME [NAME ...]]
+python zjuscore.py [-h] [-i] [-o] [-u] [-ls [YEAR [SEMESTER ...]]] [-n NAME [NAME ...]]
                    [-g [YEAR [SEMESTER ...]]] [-d [DingWebhook]] [-dn]
 ```
 
@@ -25,15 +25,15 @@ Use `-h` or `--help` to get help.
 
 ```powershell
 PS > python zjuscore.py -h
-usage: zjuscore.py [-h] [-i username password] [-u] [-ls [YEAR [SEMESTER ...]]] [-n NAME [NAME ...]]
+usage: zjuscore.py [-h] [-i] [-o] [-u] [-ls [YEAR [SEMESTER ...]]] [-n NAME [NAME ...]]
                    [-g [YEAR [SEMESTER ...]]] [-d [DingWebhook]] [-dn]
 
 ZJU Score Assistant
 
 options:
   -h, --help            show this help message and exit
-  -i username password, --initial username password
-                        initialize your information
+  -i, --login           log in with ZJUAM account
+  -o, --logout          log out
   -u, --update          update the course score
   -ls [YEAR [SEMESTER ...]], --list [YEAR [SEMESTER ...]]
                         list the course and score in a certain year/semester
@@ -46,16 +46,31 @@ options:
   -dn, --dnotification  enable dingtalk score notification
 ```
 
-### Initialize the Score Assistant
+### Log in your ZJUAM account
 
-You need to log in to get your score information, so it is necessary to let the assistant to know your username (usually your student ID) and password. You can use `-i` or `--initial` to initialize, followed by tow arguments `USERNAME` and `PASSWORD`. Then the program will automatically verify your username and password. Your information will be saved on your computer.
+You need to log in to get your score information, so it is necessary to let the assistant to know your username (usually your student ID) and password. You can use `-i` or `--login` to log in your ZJUAM account. Then the program will ask for your username and password and log in your account. Your student ID will be saved on your computer. The score assistant will not save your password, only use it for login.
 
 ```powershell
-PS > python zjuscore.py -i 1234 56
-Invalid username or password. Please check them again and use -i to reset them.
+PS > python zjuscore.py -i
+ZJUAM account's username: 3200101111
+ZJUAM 's password: 
+Log in failed. Please check your username and password again and use -i to reset them.
 
-PS > python zjuscore.py -i 320010**** **********
-Initial Success!
+PS > python zjuscore.py -i
+ZJUAM account's username: 3200101111
+ZJUAM 's password: 
+Login succeeded!
+```
+
+### Log out your account
+If you want to log out your account, you can use `-o` or `--logout`. Your score data will remain.
+
+```powershell
+PS > python zjuscore.py -o
+Logout succeeded!
+
+PS > python zjuscore.py -o
+You have not logged in.
 ```
 
 ### Update the Score on your Computer

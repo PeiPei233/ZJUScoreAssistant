@@ -3,7 +3,9 @@ import re
 import math
 
 class zjusess(requests.Session):
-    def __rsa_no_padding__(self, src, modulus, exponent):
+
+    @staticmethod
+    def __rsa_no_padding(src, modulus, exponent):
         m = int(modulus, 16)
         e = int(exponent, 16)
         t = bytes(src, 'ascii')
@@ -29,7 +31,7 @@ class zjusess(requests.Session):
         modulus = res.json()['modulus']
         exponent = res.json()['exponent']
 
-        rsapwd = self.__rsa_no_padding__(password, modulus, exponent)
+        rsapwd = self.__rsa_no_padding(password, modulus, exponent)
 
         data = {
             'username': username,
