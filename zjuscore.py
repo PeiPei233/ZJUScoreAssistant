@@ -1,4 +1,5 @@
 import argparse
+import getpass
 import json
 import difflib
 import sys
@@ -12,7 +13,7 @@ def pad_len(string, length):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='ZJU Score Assistant')
-    parser.add_argument('-i', '--initial', nargs=2, metavar=('username', 'password'), help='initialize your information')
+    parser.add_argument('-i', '--initial', action='store_true', help='initialize your information')
     parser.add_argument('-u', '--update', action='store_true', help='update the course score')
     parser.add_argument('-ls', '--list', nargs='*', metavar=('YEAR', 'SEMESTER'), help='list the course and score in a certain year/semester')
     parser.add_argument('-n', '--name', nargs='+', help='search score by the name of the course')
@@ -22,13 +23,14 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.initial:
-        database = {
-            'username': args.initial[0],
-            'password': args.initial[1],
-        }
 
-        username = args.initial[0]
-        password = args.initial[1]
+        username = input("ZJUAM account's username: ")
+        password = getpass.getpass(f"ZJUAM {username}'s password: ")
+
+        database = {
+            'username': username,
+            'password': password,
+        }
 
         session = zjusess()
         try:
@@ -70,6 +72,7 @@ if __name__ == '__main__':
                 with open('userscore.json', 'w') as f:
                     f.write(json.dumps(data))
                 print('Updated Success!')
+        session.close()
     else:
         try:
             with open('userscore.json', 'r') as f:
