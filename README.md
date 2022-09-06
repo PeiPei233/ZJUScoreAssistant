@@ -25,15 +25,14 @@ Use `-h` or `--help` to get help.
 
 ```powershell
 PS > python zjuscore.py -h
-usage: zjuscore.py [-h] [-i username password] [-u] [-ls [YEAR [SEMESTER ...]]] [-n NAME [NAME ...]]
+usage: zjuscore.py [-h] [-i] [-u] [-ls [YEAR [SEMESTER ...]]] [-n NAME [NAME ...]]
                    [-g [YEAR [SEMESTER ...]]] [-d [DingWebhook]] [-dn]
 
 ZJU Score Assistant
 
 options:
   -h, --help            show this help message and exit
-  -i username password, --initial username password
-                        initialize your information
+  -i, --initial         initialize your information
   -u, --update          update the course score
   -ls [YEAR [SEMESTER ...]], --list [YEAR [SEMESTER ...]]
                         list the course and score in a certain year/semester
@@ -48,14 +47,18 @@ options:
 
 ### Initialize the Score Assistant
 
-You need to log in to get your score information, so it is necessary to let the assistant to know your username (usually your student ID) and password. You can use `-i` or `--initial` to initialize, followed by tow arguments `USERNAME` and `PASSWORD`. Then the program will automatically verify your username and password. Your information will be saved on your computer.
+You need to log in to get your score information, so it is necessary to let the assistant to know your username (usually your student ID) and password. You can use `-i` or `--initial` to initialize. Then the program will ask for your information and automatically verify your username and password. Your information will be saved on your computer.
 
 ```powershell
-PS > python zjuscore.py -i 1234 56
-Invalid username or password. Please check them again and use -i to reset them.
+PS > python zjuscore.py -i
+ZJUAM account's username: 3200106666
+ZJUAM 3200106666's password: 
+Error: Invalid username or password. Please check them again and use -i to reset them.
 
-PS > python zjuscore.py -i 320010**** **********
-Initial Success!
+PS > python zjuscore.py -i
+ZJUAM account's username: 3200106666
+ZJUAM 3200106666's password: 
+Done: Initial Success!
 ```
 
 ### Update the Score on your Computer
@@ -152,6 +155,6 @@ Once there is an updated information, your dingtalk robot will push the followin
 
 Use the mutiple combination of arguments to simplied the use process. For example:
 
-- Run `python zjuscore.py -i 321010xxxx xxxxxxxx -u -g` to initialize and obtain your GPA.
-- Run `python zjuscore.py -i 321010xxxx xxxxxxxx -d https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxx -dn` to initialize and enable the notification assistant.
+- Run `python zjuscore.py -i -u -g` to initialize and obtain your GPA.
+- Run `python zjuscore.py -i -d https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxxxx -dn` to initialize and enable the notification assistant.
 - Run `python zjuscore.py -u -n xxx` `python zjuscore.py -u -ls` or `python zjuscore.py -u -ls` to make the assistant resynchronize your score information from ZJU every time you query the score information.
