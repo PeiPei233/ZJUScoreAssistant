@@ -38,7 +38,7 @@ class zjusess(requests.Session):
             '_eventId': 'submit'
         }
         # 登录
-        res = self.post(r'https://zjuam.zju.edu.cn/cas/login', data)
+        res = self.post(r'https://zjuam.zju.edu.cn/cas/login', data, allow_redirects=False)
         if res.text.find('统一身份认证平台') == -1:
             return True
         else:

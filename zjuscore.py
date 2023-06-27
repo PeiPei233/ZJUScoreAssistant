@@ -81,7 +81,7 @@ if __name__ == '__main__':
                 print_log(LOG.error, 'Login failed. Please check your username and password. Remember to use -i to reset them.')
             else:
                 #打开成绩查询网站
-                res = session.get(r'http://appservice.zju.edu.cn/zdjw/cjcx/cjcxjg?lx=0&xn=&xq=&cjd=&xqtit=%E6%98%A5%E3%80%81%E5%A4%8F')
+                res = session.get(r'http://appservice.zju.edu.cn/zdjw/cjcx/cjcxjg')
                 res = session.post('http://appservice.zju.edu.cn/zju-smartcampus/zdydjw/api/kkqk_cxXscjxx')
 
                 data = dict(enumerate(res.json()['data']['list']))
