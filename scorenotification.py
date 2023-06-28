@@ -77,6 +77,8 @@ def updatescore():
             userscore = json.load(load_f)
     except json.decoder.JSONDecodeError:
         userscore = {}
+    except FileNotFoundError:
+        userscore = {}
 
     totcredits = 0
     totgp = 0
@@ -149,7 +151,7 @@ def scorenotification():
     while True:
         try:
             updatescore()
-        except:
-            print(time.ctime() + " Fail")
+        except Exception as e:
+            print(time.ctime() + " " + str(e))
         finally:
             time.sleep(random.randint(60, 300))
