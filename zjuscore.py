@@ -138,7 +138,7 @@ if __name__ == '__main__':
             if len(args.list) > 2:
                 print_log(LOG.warning, f'The following argument(s) will be ignored:\n\t{" ".join(args.list[2:])}')
 
-            courses = [i for i in data.values() if i.get('xn').find(args.list[0]) == 0 and args.list[1].find(i.get('xq')) != -1]
+            courses = [i for i in data.values() if i.get('xn').find(args.list[0]) == 0 and args.list[1].find(i.get('xq', '-1')) != -1]
 
             if len(courses) == 0:
                 print_log(LOG.info, f'Cannot find any courses about the semester of {" ".join(args.list[:2])}')
@@ -180,8 +180,8 @@ if __name__ == '__main__':
     if args.gpa != None:
         if len(args.gpa) == 0:
             
-            grade = [i.get('jd') for i in data.values()]
-            credit = [float(i.get('xf')) for i in data.values()]
+            grade = [i.get('jd') for i in data.values() if i.get('cj') not in ['合格', '不合格', '弃修']]
+            credit = [float(i.get('xf')) for i in data.values() if i.get('cj') not in ['合格', '不合格', '弃修']]
 
             if len(grade) == 0:
                 print_log(LOG.info, f'Cannot find any courses during the whole college.')
@@ -198,8 +198,8 @@ if __name__ == '__main__':
 
         elif len(args.gpa) == 1:
 
-            grade = [i.get('jd') for i in data.values() if i.get('xn').find(args.gpa[0]) == 0]
-            credit = [float(i.get('xf')) for i in data.values() if i.get('xn').find(args.gpa[0]) == 0]
+            grade = [i.get('jd') for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and i.get('cj') not in ['合格', '不合格', '弃修']]
+            credit = [float(i.get('xf')) for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and i.get('cj') not in ['合格', '不合格', '弃修']]
 
             if len(grade) == 0:
                 print_log(LOG.info, f'Cannot find any courses about the academic year of {args.gpa[0]}')
@@ -226,8 +226,8 @@ if __name__ == '__main__':
             if len(args.gpa) > 2:
                 print_log(LOG.warning, f'The following argument(s) will be ignored:\n\t{" ".join(args.gpa[2:])}')
 
-            grade = [i.get('jd') for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq')) != -1]
-            credit = [float(i.get('xf')) for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq')) != -1]
+            grade = [i.get('jd') for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq', '-1')) != -1 and i.get('cj') not in ['合格', '不合格', '弃修']]
+            credit = [float(i.get('xf')) for i in data.values() if i.get('xn').find(args.gpa[0]) == 0 and args.gpa[1].find(i.get('xq', '-1')) != -1 and i.get('cj') not in ['合格', '不合格', '弃修']]
 
             if len(grade) == 0:
                 print_log(LOG.info, f'Cannot find any courses about the semester of {" ".join(args.gpa[:2])}')
