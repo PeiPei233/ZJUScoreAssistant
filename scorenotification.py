@@ -76,10 +76,14 @@ def updatescore():
             userscore = json.load(load_f)
     except json.decoder.JSONDecodeError:
         userscore = {}
+    except FileNotFoundError:
+        userscore = {}
 
     totcredits = 0
     totgp = 0
     for lesson in userscore:
+        if userscore[lesson]['score'] in ['合格', '不合格', '弃修']:
+            continue
         totgp += float(userscore[lesson]['gp']) * float(userscore[lesson]['credit'])
         totcredits += float(userscore[lesson]['credit'])
     try:
@@ -109,6 +113,8 @@ def updatescore():
         newtotcredits = 0
         newtotgp = 0
         for lesson in userscore:
+            if userscore[lesson]['score'] in ['合格', '不合格', '弃修']:
+                continue
             newtotgp += float(userscore[lesson]['gp']) * float(userscore[lesson]['credit'])
             newtotcredits += float(userscore[lesson]['credit'])
         try:
@@ -148,7 +154,7 @@ def scorenotification():
     while True:
         try:
             updatescore()
-        except:
-            print(time.ctime() + " Fail")
+        except Exception as e:
+            print(time.ctime() + " " + str(e))
         finally:
             time.sleep(random.randint(60, 300))
