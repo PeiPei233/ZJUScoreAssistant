@@ -24,7 +24,7 @@ def updatescore():
     session = requests.session()
 
     # 打开网站
-    res = session.get('https://zjuam.zju.edu.cn/cas/login?service=http://jwbinfosys.zju.edu.cn/default2.aspx')
+    res = session.get('https://zjuam.zju.edu.cn/cas/login?service=http://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html')
     # 获取execution的值以用于登录
     execution = re.findall(r'<input type="hidden" name="execution" value="(.*?)" />', res.text)[0]
     # 获取RSA公钥
@@ -47,31 +47,30 @@ def updatescore():
         '_eventId': 'submit'
     }
     # 登录
-    res = session.post('https://zjuam.zju.edu.cn/cas/login?service=http://jwbinfosys.zju.edu.cn/default2.aspx', data)
-    #打开成绩查询网站
-    res = session.get('http://jwbinfosys.zju.edu.cn/xsdhqt.aspx?dl=iconcjcx')
-    #获取__VIEWSTATE以用于查询
-    viewstate = re.findall(r'<input type="hidden" name="__VIEWSTATE" value="(.*?)" />', res.text)[0]
+    res = session.post('https://zjuam.zju.edu.cn/cas/login?service=http://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html', data)
+    
+    gnmkdm = re.findall(r"onclick=\"clickMenu\('(N\d+)','[^']*','成绩查询'", res.text)[0]
+
     headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'User-Agent': r'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.36'
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Redmi K30 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
     }
 
-    res = session.post(url='http://jwbinfosys.zju.edu.cn/xscj.aspx?xh=' + username,
-        data={
-            '__VIEWSTATE': viewstate,
-            'ddlXN': '',
-            'ddlXQ': '',
-            'txtQSCJ': '',
-            'txtZZCJ': '',
-            'Button2': r'%D4%DA%D0%A3%D1%A7%CF%B0%B3%C9%BC%A8%B2%E9%D1%AF'
-        },
-        headers=headers
-        )
-    
-    # 成绩的表格
-    table = re.finditer(r'<td>(?P<id>.*?)</td><td>(?P<name>.*?)</td><td>(?P<score>.*?)</td><td>(?P<credit>.*?)</td><td>(?P<gp>.*?)</td>', res.text)
+    res = session.post(url=f'http://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&gnmkdm={gnmkdm}&su={username}', data={
+        'xn': None,
+        'xq': None,
+        'zscjl': None,
+        'zscjr': None,
+        '_search': 'false',
+        'nd': str(int(time.time() * 1000)),
+        'queryModel.showCount': 5000,
+        'queryModel.currentPage': 1,
+        'queryModel.sortName': 'xkkh',
+        'queryModel.sortOrder': 'asc',
+        'time': 0,
+    }, headers=headers)
 
+    new_score = res.json()['items']
+    
     try:
         with open("dingscore.json", 'r') as load_f:
             userscore = json.load(load_f)
@@ -89,12 +88,12 @@ def updatescore():
         gpa = 0
     
     #对比以更新
-    for lesson in table:
-        id = lesson.group('id')
-        name = lesson.group('name')
-        score = lesson.group('score')
-        credit = lesson.group('credit')
-        gp = lesson.group('gp')
+    for lesson in new_score:
+        id = lesson['xkkh']
+        name = lesson['kcmc']
+        score = lesson['cj']
+        credit = lesson['xf']
+        gp = lesson['jd']
         if id == '选课课号':
             continue
         if userscore.get(id) != None:
