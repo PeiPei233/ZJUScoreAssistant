@@ -148,7 +148,7 @@ def updatescore():
 
     #保存新的数据
     with open("dingscore.json", 'w', encoding="utf-8") as load_f:
-        load_f.write(json.dumps(userscore))
+        load_f.write(json.dumps(userscore, indent=4, ensure_ascii=False))
 
 def scorenotification():
     while True:
