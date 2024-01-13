@@ -56,8 +56,8 @@ if __name__ == '__main__':
         except requests.exceptions.ConnectionError:
             print_log(LOG.error, 'Cannot connect to the Internet. Please check your Internet connection.')
         else:
-            with open("database.json", 'w') as load_f:
-                load_f.write(json.dumps(database))
+            with open("database.json", 'w', encoding="utf-8") as load_f:
+                load_f.write(json.dumps(database, indent=4, ensure_ascii=False))
             print_log(LOG.done, 'Initial Success!')
         session.close()
 
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     if args.update:
         session = zjusess()
         try:
-            with open('database.json', 'r') as f:
+            with open('database.json', 'r', encoding="utf-8") as f:
                 userdata = json.load(f)
         except:
             print_log(LOG.error, 'Cannot find your user data. Please use -i to initialize.')
@@ -85,13 +85,13 @@ if __name__ == '__main__':
                 res = session.post('http://appservice.zju.edu.cn/zju-smartcampus/zdydjw/api/kkqk_cxXscjxx')
 
                 data = dict(enumerate(res.json()['data']['list']))
-                with open('userscore.json', 'w') as f:
-                    f.write(json.dumps(data))
+                with open('userscore.json', 'w', encoding="utf-8") as f:
+                    f.write(json.dumps(data, indent=4, ensure_ascii=False))
                 print_log(LOG.done, 'Updated Successfully!')
         session.close()
     else:
         try:
-            with open('userscore.json', 'r') as f:
+            with open('userscore.json', 'r', encoding="utf-8") as f:
                 data = json.load(f)
         except:
             print_log(LOG.error, 'Cannot find your score data, please use -u to update first.')
@@ -254,22 +254,22 @@ if __name__ == '__main__':
     try:
         if args.ding:
             try:
-                with open('database.json', 'r') as f:
+                with open('database.json', 'r', encoding="utf-8") as f:
                     userdata = json.load(f)
             except json.decoder.JSONDecodeError:
                 userdata = {}
             userdata['url'] = args.ding
-            with open("database.json", 'w') as load_f:
-                load_f.write(json.dumps(userdata))
+            with open("database.json", 'w', encoding="utf-8") as load_f:
+                load_f.write(json.dumps(userdata, indent=4, ensure_ascii=False))
         else:
             try:
-                with open('database.json', 'r') as f:
+                with open('database.json', 'r', encoding="utf-8") as f:
                     userdata = json.load(f)
             except json.decoder.JSONDecodeError:
                 userdata = {}
             userdata['url'] = 'https://oapi.dingtalk.com/robot/send?access_token='
-            with open("database.json", 'w') as load_f:
-                load_f.write(json.dumps(userdata))
+            with open("database.json", 'w', encoding="utf-8") as load_f:
+                load_f.write(json.dumps(userdata, indent=4, ensure_ascii=False))
     except AttributeError:
         pass
 
