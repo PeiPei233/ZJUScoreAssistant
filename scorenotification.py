@@ -32,7 +32,7 @@ def updatescore():
     modulus = res.json()['modulus']
     exponent = res.json()['exponent']
 
-    with open('database.json', 'r') as f:
+    with open('database.json', 'r', encoding="utf-8") as f:
         userdata = json.load(f)
     username = userdata['username']
     password = userdata['password']
@@ -72,7 +72,7 @@ def updatescore():
     new_score = res.json()['items']
     
     try:
-        with open("dingscore.json", 'r') as load_f:
+        with open("dingscore.json", 'r', encoding="utf-8") as load_f:
             userscore = json.load(load_f)
     except json.decoder.JSONDecodeError:
         userscore = {}
@@ -147,7 +147,7 @@ def updatescore():
         gpa = newgpa
 
     #保存新的数据
-    with open("dingscore.json", 'w') as load_f:
+    with open("dingscore.json", 'w', encoding="utf-8") as load_f:
         load_f.write(json.dumps(userscore))
 
 def scorenotification():
