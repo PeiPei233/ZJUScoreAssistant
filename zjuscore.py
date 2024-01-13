@@ -159,7 +159,10 @@ if __name__ == '__main__':
         coursename = [i.get('kcmc') for i in data.values()]
         res = []
         for searchcourse in args.name:
-            res += difflib.get_close_matches(searchcourse, coursename, cutoff=0.3)
+            res += difflib.get_close_matches(searchcourse, coursename, n=len(coursename), cutoff=0.3)
+            for course in coursename:
+                if searchcourse in course:
+                    res.append(course)
         res = list(dict().fromkeys(res).keys())
         if len(res) == 0:
             print_log(LOG.info, f'Cannot find any course matching keyword(s) {" ".join(args.name)}')
