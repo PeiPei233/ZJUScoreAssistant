@@ -20,7 +20,7 @@ def rsa_no_padding(src, modulus, exponent):
     # 将密文转换为bytes存储(8字节)，返回hex(16字节)
     return crypt_data.hex()
 
-def updatescore():
+def updatescore(xuenian=None):
     session = requests.session()
 
     # 打开网站
@@ -48,15 +48,19 @@ def updatescore():
     }
     # 登录
     res = session.post('https://zjuam.zju.edu.cn/cas/login?service=http://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html', data)
-    
-    gnmkdm = re.findall(r"onclick=\"clickMenu\('(N\d+)','[^']*','成绩查询'", res.text)[0]
+    data["doType"] = "zjsy"
+    res = session.post('http://zdbk.zju.edu.cn/jwglxt/xtgl/index_cxLeafGnmkdm.html?gnmkdm=index&su=3220100059', data)
+    gnmkdm = ""
+    for project in res.json()["result"]:
+        if project["gnmkmc"] == "成绩查询":
+            gnmkdm = project["gnmkdm"]
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Redmi K30 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
     }
 
     res = session.post(url=f'http://zdbk.zju.edu.cn/jwglxt/cxdy/xscjcx_cxXscjIndex.html?doType=query&gnmkdm={gnmkdm}&su={username}', data={
-        'xn': None,
+        'xn': xuenian,
         'xq': None,
         'zscjl': None,
         'zscjr': None,
@@ -83,6 +87,8 @@ def updatescore():
     totgp = 0
     for lesson in userscore:
         if userscore[lesson]['score'] in ['合格', '不合格', '弃修']:
+            continue
+        if xuenian not in lesson:
             continue
         totgp += float(userscore[lesson]['gp']) * float(userscore[lesson]['credit'])
         totcredits += float(userscore[lesson]['credit'])
@@ -114,6 +120,8 @@ def updatescore():
         newtotgp = 0
         for lesson in userscore:
             if userscore[lesson]['score'] in ['合格', '不合格', '弃修']:
+                continue
+            if xuenian not in lesson:
                 continue
             newtotgp += float(userscore[lesson]['gp']) * float(userscore[lesson]['credit'])
             newtotcredits += float(userscore[lesson]['credit'])
@@ -150,11 +158,24 @@ def updatescore():
     with open("dingscore.json", 'w', encoding="utf-8") as load_f:
         load_f.write(json.dumps(userscore, indent=4, ensure_ascii=False))
 
-def scorenotification():
+def scorenotification(xuenian=None):
+    try:
+        with open("counter.txt", "r", encoding="utf-8") as f:
+            times = int(f.read())
+    except:
+        times = 0
     while True:
+        times += 1
+        print(time.strftime("%m-%d %H:%M:%S", time.localtime()), f"第 {times} 次运行", end='，')
         try:
-            updatescore()
+            updatescore(xuenian)
+            print("没有新绩点")
         except Exception as e:
-            print(time.ctime() + " " + str(e))
+            print(str(e))
         finally:
-            time.sleep(random.randint(60, 300))
+            with open("counter.txt", "w", encoding="utf-8") as f:
+                f.write(str(times))
+            time.sleep(random.randint(40, 80))
+
+if __name__ == "__main__":
+    scorenotification("2023-2024")
