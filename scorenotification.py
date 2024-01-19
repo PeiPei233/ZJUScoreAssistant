@@ -49,7 +49,7 @@ def updatescore():
     # 登录
     res = session.post('https://zjuam.zju.edu.cn/cas/login?service=http://zdbk.zju.edu.cn/jwglxt/xtgl/login_ssologin.html', data)
     
-    gnmkdm = re.findall(r"onclick=\"clickMenu\('(N\d+)','[^']*','成绩查询'", res.text)[0]
+    gnmkdm = 'N5083'
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Linux; Android 10; Redmi K30 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Mobile Safari/537.36',
