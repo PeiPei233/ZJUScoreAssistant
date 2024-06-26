@@ -80,14 +80,17 @@ if __name__ == '__main__':
             if not res:
                 print_log(LOG.error, 'Login failed. Please check your username and password. Remember to use -i to reset them.')
             else:
+                try:
                 #打开成绩查询网站
-                res = session.get(r'http://appservice.zju.edu.cn/zdjw/cjcx/cjcxjg')
-                res = session.post('http://appservice.zju.edu.cn/zju-smartcampus/zdydjw/api/kkqk_cxXscjxx')
+                    res = session.get(r'http://appservice.zju.edu.cn/zdjw/cjcx/cjcxjg')
+                    res = session.post('http://appservice.zju.edu.cn/zju-smartcampus/zdydjw/api/kkqk_cxXscjxx')
 
-                data = dict(enumerate(res.json()['data']['list']))
-                with open('userscore.json', 'w') as f:
-                    f.write(json.dumps(data))
-                print_log(LOG.done, 'Updated Successfully!')
+                    data = dict(enumerate(res.json()['data']['list']))
+                    with open('userscore.json', 'w') as f:
+                        f.write(json.dumps(data))
+                    print_log(LOG.done, 'Updated Successfully!')
+                except:
+                    print_log(LOG.error, 'Cannot connect to the Internet. Please check your Internet connection.')
         session.close()
     else:
         try:
